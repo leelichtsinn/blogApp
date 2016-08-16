@@ -2,17 +2,13 @@
 var express = require('express');
 var fs = require('fs');
 var _ = require('lodash');
-
+var pg = require('pg');
 
 // create an http server
 var app = express();
 
 app.set('views', './views'); // specify the views directory
 app.set('view engine', 'ejs');
-
-
-
-var pg = require('pg');
 
 // create a config to configure both pooling behavior
 // and client options
@@ -58,7 +54,7 @@ pool.on('error', function (err, client) {
   // this is a rare occurrence but can happen if there is a network partition
   // between your application and the database, the database restarts, etc.
   // and so you might want to handle it and at least log it out
-  console.error('idle client error', err.message, err.stack)
+  console.log('idle client error', err.message, err.stack)
 })
 
 
