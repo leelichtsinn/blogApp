@@ -1,4 +1,23 @@
 <h1>Users</h1>
-<% result.rows.forEach(function(row) { %>
-  <div><% row.title %></div>
-<% }) %>
+<table>
+  <tbody>
+    <thead>
+      <tr>
+        <td>ID</td>
+        <td>Title</td>
+        <td>User ID</td>
+        <td>Date</td>
+      </tr>
+    </thead>
+    <% result.rows.forEach(function(row) { %>
+      <tr>
+        <td><%= row.id %></td>
+        <td>
+          <a href="/posts/<%= row.id %>"><%= row.title %></a>
+        </td>
+        <td><%= row.user_id %></td>
+        <td><%= row.date %></td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
