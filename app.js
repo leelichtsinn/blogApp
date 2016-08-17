@@ -90,22 +90,50 @@ var getPosts = function(id) {
 
 // handle incoming requests to the "/" endpoint
 app.get('/', function (request, response) {
-  response.render('index')
-  // fs.readFile('index.html', function(error, html) {
-  //   var template = _.template(html);
-  //   var posts = getPosts();
-  //   var generated = template({ posts: posts });
-  //   response.send(generated);
-  // });
+
+  pool.connect(function(err, client, done) {
+    if(err) {
+      return console.error('error fetching client from pool', err);
+    }
+    client.query('select * from posts', function(err, result) {
+      //call `done()` to release the client back to the pool
+      done();
+
+      if(err) {
+        return console.error('error running query', err);
+      }
+
+      response.render('index', { result: result });
+
+      //output: 1
+    });
+  });
 });
 
 // define the /posts/:id page
 app.get('/posts/:id', function(request, response) {
-  var html = fs.readFileSync('post.html').toString();
-  var template = _.template(html);
-  var post = getPosts(parseInt(request.params.id));
-  var generated = template({ post: post });
-  response.send(generated);
+  pool.connect(function(err, client, done) {
+    if (err) {
+      return console.error('error fetching client from pool', err);
+    }
+
+    var postId = request.params.id;
+
+    client.query('select * from posts where id = ' + postId, function(err, result) {
+      //call `done()` to release the client back to the pool
+      done();
+
+      if(err) {
+        return console.error('error running query', err);
+      }
+
+      var post = result.rows[0];
+
+      response.render('post', { post: post });
+
+      //output: 1
+    });
+  });
 });
 
 // handle blog post creation
