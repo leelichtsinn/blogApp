@@ -16,7 +16,7 @@ app.set('view engine', 'ejs');
 // will be read if the config is not present
 var config = {
   user: 'postgres', //env var: PGUSER
-  database: 'postgres', //env var: PGDATABASE
+  database: 'leelichtsinn', //env var: PGDATABASE
   // password: 'secret', //env var: PGPASSWORD
   port: 5432, //env var: PGPORT
   max: 10, // max number of clients in the pool
