@@ -3,143 +3,109 @@ var express = require('express');
 var fs = require('fs');
 var _ = require('lodash');
 var pg = require('pg');
+var bodyParser = require('body-parser');
+var Sequelize = require('sequelize');
 
 // create an http server
 var app = express();
 
+// create application/x-www-form-urlencoded parser
+var urlencodedParser = bodyParser.urlencoded({ extended: false });
+
+
 app.set('views', './views'); // specify the views directory
 app.set('view engine', 'ejs');
 
-// create a config to configure both pooling behavior
-// and client options
-// note: all config is optional and the environment variables
-// will be read if the config is not present
-var config = {
-  user: 'postgres', //env var: PGUSER
-  database: 'leelichtsinn', //env var: PGDATABASE
-  // password: 'secret', //env var: PGPASSWORD
-  port: 5432, //env var: PGPORT
-  max: 10, // max number of clients in the pool
-  idleTimeoutMillis: 30000, // how long a client is allowed to remain idle before being closed
-};
-
-
-//this initializes a connection pool
-//it will keep idle connections open for a 30 seconds
-//and set a limit of maximum 10 idle clients
-var pool = new pg.Pool(config);
-
-// to run a query we can acquire a client from the pool,
-// run a query on the client, and then return the client to the pool
-pool.connect(function(err, client, done) {
-  if(err) {
-    return console.error('error fetching client from pool', err);
-  }
-  client.query('select * from users', function(err, result) {
-    //call `done()` to release the client back to the pool
-    done();
-
-    if(err) {
-      return console.error('error running query', err);
-    }
-    console.log(result.rows[0]);
-    //output: 1
-  });
+// new Sequelize('database', 'username', 'password', options)
+var sequelize = new Sequelize('leelichtsinn', 'leelichtsinn', '', {
+  host: 'localhost',
+  dialect: 'postgres'
 });
 
-pool.on('error', function (err, client) {
-  // if an error is encountered by a client while it sits idle in the pool
-  // the pool itself will emit an error event with both the error and
-  // the client which emitted the original error
-  // this is a rare occurrence but can happen if there is a network partition
-  // between your application and the database, the database restarts, etc.
-  // and so you might want to handle it and at least log it out
-  console.log('idle client error', err.message, err.stack)
-})
+var User = sequelize.define('users', {
+  firstName: {
+    type: Sequelize.STRING,
+    field: 'first_name' // Will result in an attribute that is firstName when user facing but first_name in the database
+  },
+  lastName: {
+    type: Sequelize.STRING
+  },
+  birthday: {
+    type: Sequelize.STRING
+  }
+});
 
+var Post = sequelize.define('posts', {
+  title: {
+    type: Sequelize.STRING,
+  },
+  body: {
+    type: Sequelize.STRING
+  },
+  date: {
+    type: Sequelize.DATEONLY
+  },
+});
 
-
+// force: true will drop the table if it already exists
+User.sync()
+Post.sync()
 
 // checking for authentication
 // app.use(function(req, res, next) {
-//   if (req.query.password !== 'secret') {
+//   if (!req.query.user) {
 //     res.send('cannot continue wrong password');
 //   } else {
+//     req.user = req.query.user;
 //     next();
 //   }
 // });
 
-var getPosts = function(id) {
-  var data = JSON.parse(fs.readFileSync('db.json').toString());
-  if (id === undefined) {
-    return data.posts;
-  }
-  for (i in data.posts) {
-    if (data.posts[i].id === id) {
-      return data.posts[i];
-    }
-  }
-};
-
-// var editPost = function(post) {
-//   var oldPost = getPost(post.id);
-//   Object.assign({}, oldPost, post);
-//   var data = JSON.parse(fs.readFileSync('db.json').toString());
-//
-// };
 
 // handle incoming requests to the "/" endpoint
 app.get('/', function (request, response) {
+  Post.findAll({
+    attributes: ['title', 'body', 'date']
+  })
+  .then(function(posts) {
+    response.render('index', { result: posts });
+  })
+});
 
-  pool.connect(function(err, client, done) {
-    if(err) {
-      return console.error('error fetching client from pool', err);
-    }
-    client.query('select * from posts', function(err, result) {
-      //call `done()` to release the client back to the pool
-      done();
-
-      if(err) {
-        return console.error('error running query', err);
-      }
-
-      response.render('index', { result: result });
-
-      //output: 1
-    });
-  });
+app.get('/posts.json', function (request, response) {
+  Post.findAll()
+  .then(function(posts) {
+    response.json(posts);
+  })
 });
 
 // define the /posts/:id page
 app.get('/posts/:id', function(request, response) {
-  pool.connect(function(err, client, done) {
-    if (err) {
-      return console.error('error fetching client from pool', err);
+  Post.findById(request.params.id)
+  .then(function(posts) {
+    if(post == null) {
+      return next();
     }
+    response.render('posts', { posts: posts });
+  })
+});
 
-    var postId = request.params.id;
-
-    client.query('select * from posts where id = ' + postId, function(err, result) {
-      //call `done()` to release the client back to the pool
-      done();
-
-      if(err) {
-        return console.error('error running query', err);
-      }
-
-      var post = result.rows[0];
-
-      response.render('post', { post: post });
-
-      //output: 1
-    });
-  });
+app.get('/new-post', function(request, response) {
+  response.render('new-post');
 });
 
 // handle blog post creation
-app.post('/posts', function(request, response) {
-  response.send('post created!');
+app.post('/posts', urlencodedParser, function(request, response) {
+  console.log(request);
+  Post.create({
+    title: request.body.title,
+    body: request.body.body,
+    date: new Date()
+  }).then(function() {
+    response.send('post created!')
+  });
 });
+
 
 app.use(function(req, res, next) {
   res.status(404).send('page not found')
