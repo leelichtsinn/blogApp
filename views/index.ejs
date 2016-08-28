@@ -6,10 +6,16 @@
       <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></script>
   </head>
   <body>
-    <h1>Users</h1>
+    <h1>Blog!</h1>
+    <hr>
+    <form class="new-post" action="/new-post" method="get">
+      <input type="submit" name="new-post" value="Create new blog post!">
+    </form>
     <form id="form" action="/posts" method="get">
+      <h3>Search Posts</h3>
       <input name="title" type="text" id="search" />
     </form>
+    <hr>
     <table>
       <tbody>
         <thead>

@@ -1,11 +1,11 @@
 <html>
   <body>
-    <form action="/posts/<%= post.id %>/edit" method="post">
+    <form action="/posts/<%= post.id %>" method="post">
       <p>Edit Title</p>
       <input type="input" name="title" value="<%= post.title %>">
       <p>Edit Body</p>
       <textarea name="body" rows="8" cols="40">
-        <% post.body %>
+      <%= post.body %>
       </textarea><br>
       <input type="submit" name="submit" value="Edit">
     </form>

@@ -1,7 +1,13 @@
 <html>
+  <head>
+    <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></script>
+  </head>
   <body>
     <h2><%= post.title %></h2>
     <p><%= post.body %></p>
-    <a href="/posts/<% post.id %>">Edit Post</a>
+    <a href="/posts/<%= post.id %>/edit">Edit Post</a>
+    <form class="" action="/posts/<%= post.id %>/delete" method="post">
+      <input type="submit" name="delete" value="Delete Post">
+    </form>
   </body>
 </html>

@@ -45,7 +45,7 @@ var Post = sequelize.define('posts', {
   },
   date: {
     type: Sequelize.DATEONLY
-  },
+  }
 });
 
 // force: true will drop the table if it already exists
@@ -78,7 +78,6 @@ app.get('/posts.json', function (request, response) {
   })
 });
 
-
 // handle search bar for post titles
 app.get('/posts', function(request, response) {
   Post.findAll({
@@ -102,6 +101,7 @@ app.get('/posts/:id', function(request, response) {
   })
 });
 
+// define new-post form endpoint
 app.get('/new-post', function(request, response) {
   response.render('new-post');
 });
@@ -133,13 +133,24 @@ app.get('/posts/:id/edit', function(request, response) {
 app.post('/posts/:id', urlencodedParser, function(request, response) {
   Post.findById(request.params.id)
   .then(function(post) {
-    posts.title = request.body.title;
-    posts.body = request.body.body;
-    posts.date = new Date();
-    posts.save()
+    post.title = request.body.title;
+    post.body = request.body.body;
+    post.date = new Date();
+    post.save()
       .then(function() {
         response.send('Post has been edited!');
     });
+  })
+});
+
+// handle deleting post
+app.post('/posts/:id/delete', urlencodedParser, function(request, response) {
+  Post.destroy({
+    where: {
+      id: request.params.id
+    }
+  }).then(function() {
+    response.redirect('/');
   })
 });
 
