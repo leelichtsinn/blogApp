@@ -1,15 +1,10 @@
-<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
     <title></title>
-      <script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></script>
   </head>
   <body>
-    <h1>Users</h1>
-    <form id="form" action="/posts" method="get">
-      <input name="title" type="text" id="search" />
-    </form>
+    <h1>Search Results</h1>
     <table>
       <tbody>
         <thead>
@@ -20,7 +15,7 @@
             <td>Date</td>
           </tr>
         </thead>
-        <% posts.forEach(function(row) { %>
+        <% result.forEach(function(row) { %>
           <tr>
             <td><%= row.id %></td>
             <td>
@@ -32,11 +27,5 @@
         <% }) %>
       </tbody>
     </table>
-    <!-- <script type="text/javascript">
-      $('#search').on('keydown', function() {
-        var $title = $('#search').val();
-        $('#form').attr('action', '/post' + $title);
-      });
-    </script> -->
   </body>
 </html>

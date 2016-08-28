@@ -5,6 +5,7 @@ var _ = require('lodash');
 var pg = require('pg');
 var bodyParser = require('body-parser');
 var Sequelize = require('sequelize');
+var config = JSON.parse(fs.readFileSync('./json-config/config.json'));
 
 // create an http server
 var app = express();
@@ -17,7 +18,7 @@ app.set('views', './views'); // specify the views directory
 app.set('view engine', 'ejs');
 
 // new Sequelize('database', 'username', 'password', options)
-var sequelize = new Sequelize('leelichtsinn', 'leelichtsinn', '', {
+var sequelize = new Sequelize(config.database, config.username, config.password, {
   host: 'localhost',
   dialect: 'postgres'
 });
@@ -64,11 +65,9 @@ Post.sync()
 
 // handle incoming requests to the "/" endpoint
 app.get('/', function (request, response) {
-  Post.findAll({
-    attributes: ['title', 'body', 'date']
-  })
+  Post.findAll()
   .then(function(posts) {
-    response.render('index', { result: posts });
+    response.render('index', { posts: posts });
   })
 });
 
@@ -79,14 +78,27 @@ app.get('/posts.json', function (request, response) {
   })
 });
 
+
+// handle search bar for post titles
+app.get('/posts', function(request, response) {
+  Post.findAll({
+    where: {
+      title: request.query.title
+    }
+  })
+  .then(function(post) {
+    response.render('search-post', { result: post });
+  });
+});
+
 // define the /posts/:id page
 app.get('/posts/:id', function(request, response) {
   Post.findById(request.params.id)
-  .then(function(posts) {
+  .then(function(post) {
     if(post == null) {
       return next();
     }
-    response.render('posts', { posts: posts });
+    response.render('post', { post: post });
   })
 });
 
@@ -102,13 +114,37 @@ app.post('/posts', urlencodedParser, function(request, response) {
     body: request.body.body,
     date: new Date()
   }).then(function() {
-    response.send('post created!')
+    response.send('post created!');
   });
 });
 
+// edit posts form
+app.get('/posts/:id/edit', function(request, response) {
+  Post.findById(request.params.id)
+  .then(function(post) {
+    if(post == null) {
+      return next();
+    }
+    response.render('edit-post', { post: post });
+  });
+});
+
+// handle updating posts
+app.post('/posts/:id', urlencodedParser, function(request, response) {
+  Post.findById(request.params.id)
+  .then(function(post) {
+    posts.title = request.body.title;
+    posts.body = request.body.body;
+    posts.date = new Date();
+    posts.save()
+      .then(function() {
+        response.send('Post has been edited!');
+    });
+  })
+});
 
 app.use(function(req, res, next) {
-  res.status(404).send('page not found')
+  res.status(404).send('page not found');
 });
 
 // listen for incoming requests
